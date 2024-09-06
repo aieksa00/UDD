@@ -1,0 +1,28 @@
+{
+  "properties": {
+    "id": {
+      "type": "keyword"
+    },
+    "signerName": {
+      "type": "text"
+    },
+    "signerSurname": {
+      "type": "text"
+    },
+    "governmentName": {
+      "type": "text"
+    },
+    "administrationLevel": {
+      "type": "text"
+    },
+    "address": {
+      "type": "text"
+    },
+    "content": {
+      "type": "text"
+    },
+    "fileName": {
+      "type": "text"
+    }
+  }
+}
