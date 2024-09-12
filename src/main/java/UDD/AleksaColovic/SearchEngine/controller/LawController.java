@@ -25,19 +25,6 @@ public class LawController {
     private final SearchConverter searchConverter;
     //endregion
 
-    @PostMapping("/create")
-    public ResponseEntity<String> create(@RequestBody final LawDTO dto) {
-        try {
-            lawService.create(lawConverter.toDocument(dto));
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Law created successfully!");
-        }
-        catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(String.format("There was a problem: %s", e.getMessage()));
-        }
-    }
-
     @PostMapping("/upload")
     public ResponseEntity<String> upload(@RequestParam("file") final MultipartFile file) {
         if (file.isEmpty()) {
@@ -90,10 +77,10 @@ public class LawController {
         }
     }
 
-    @GetMapping("/search")
+    @PutMapping("/search")
     public ResponseEntity<?> search(@RequestBody final SearchDTO dto) {
         try {
-            var hits = lawService.search(searchConverter.createSearchItems(dto));
+            var hits = lawService.search(searchConverter.createSearchItems(dto), dto.getRadius());
             List<LawDTO> dtos = searchConverter.convertToLawDTOs(hits);
 
             return ResponseEntity.status(HttpStatus.OK)

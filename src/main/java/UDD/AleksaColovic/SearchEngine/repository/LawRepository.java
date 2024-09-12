@@ -6,4 +6,5 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import java.util.UUID;
 
 public interface LawRepository extends ElasticsearchRepository<LawDocument, UUID> {
+    LawDocument findByFileName(String fileName);
 }

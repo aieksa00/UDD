@@ -12,13 +12,9 @@ import java.util.Collections;
 @Service
 @RequiredArgsConstructor
 public class MinioService {
-
-    @Value("${spring.minio.bucket}")
-    private String bucketName;
-
     private final MinioClient minioClient;
 
-    public void uploadFile(String fileName, MultipartFile file) throws Exception {
+    public void uploadFile(String fileName, MultipartFile file, String bucketName) throws Exception {
         try {
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(bucketName)
@@ -33,7 +29,7 @@ public class MinioService {
         }
     }
 
-    public GetObjectResponse loadFile(String fileName) throws Exception {
+    public GetObjectResponse loadFile(String fileName, String bucketName) throws Exception {
         try {
             // Get signed URL
             var argsDownload = GetPresignedObjectUrlArgs.builder()
@@ -56,8 +52,22 @@ public class MinioService {
             throw new Exception("Error while loading file from Minio.");
         }
     }
+    public boolean checkIfExists(String fileName, String bucketName)  {
+        try {
+            // Get signed URL
+            var checkExists = StatObjectArgs.builder()
+                    .bucket(bucketName)
+                    .object(fileName)
+                    .build();
+            var exists = minioClient.statObject(checkExists);
+            return true;
 
-    public void deleteFile(String fileName) throws Exception {
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void deleteFile(String fileName, String bucketName) throws Exception{
         try {
             RemoveObjectArgs args = RemoveObjectArgs.builder()
                     .bucket(bucketName)

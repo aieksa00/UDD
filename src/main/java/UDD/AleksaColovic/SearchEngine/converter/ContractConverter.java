@@ -2,6 +2,7 @@ package UDD.AleksaColovic.SearchEngine.converter;
 
 import UDD.AleksaColovic.SearchEngine.dto.ContractDTO;
 import UDD.AleksaColovic.SearchEngine.model.ContractDocument;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,6 @@ public class ContractConverter {
            return null;
         }
 
-        return new ContractDTO(document.getId().toString(), document.getSignerName(), document.getSignerSurname(), document.getGovernmentName(), document.getAdministrationLevel(), document.getAddress(), document.getContent(), document.getFileName());
+        return new ContractDTO(document.getId().toString(), document.getSignerName(), document.getSignerSurname(), document.getGovernmentName(), document.getAdministrationLevel(), document.getAddress(), document.getContent(), document.getFileName(), GeoPoint.toPoint(document.getLocation()));
     }
 }

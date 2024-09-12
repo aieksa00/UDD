@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
 import java.util.UUID;
 
@@ -26,10 +27,22 @@ public class ContractDocument extends AbstractDocument {
     private String address;
     private String content;
     private String fileName;
-    private GeoLocation location;
+    private GeoPoint location;
     //endregion
 
     //region: Constructor
+    public ContractDocument(UUID id, String signerName, String signerSurname, String governmentName, String administrationLevel, String address, String content, String fileName, GeoPoint location) {
+        this.setId(id);
+        this.signerName = signerName;
+        this.signerSurname = signerSurname;
+        this.governmentName = governmentName;
+        this.administrationLevel = administrationLevel;
+        this.address = address;
+        this.content = content;
+        this.fileName = fileName;
+        this.location = location;
+    }
+
     public ContractDocument(UUID id, String signerName, String signerSurname, String governmentName, String administrationLevel, String address, String content, String fileName) {
         this.setId(id);
         this.signerName = signerName;
@@ -39,6 +52,16 @@ public class ContractDocument extends AbstractDocument {
         this.address = address;
         this.content = content;
         this.fileName = fileName;
+    }
+
+    public ContractDocument(UUID id, String signerName, String signerSurname, String governmentName, String administrationLevel, String address, String content) {
+        this.setId(id);
+        this.signerName = signerName;
+        this.signerSurname = signerSurname;
+        this.governmentName = governmentName;
+        this.administrationLevel = administrationLevel;
+        this.address = address;
+        this.content = content;
     }
     //endregion
 

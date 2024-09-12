@@ -39,9 +39,7 @@
       "search_analyzer": "serbian_simple"
     },
     "location": {
-      "type": "text",
-      "analyzer": "serbian_simple",
-      "search_analyzer": "serbian_simple"
+      "type": "geo_point"
     }
   }
 }

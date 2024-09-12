@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.OptionalDouble;
 
 @Data
 @Builder
@@ -13,4 +14,5 @@ import java.util.List;
 @NoArgsConstructor
 public class SearchDTO {
     private List<String> searchParams;
+    private OptionalDouble radius;
 }

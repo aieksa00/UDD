@@ -8,6 +8,7 @@ import UDD.AleksaColovic.SearchEngine.model.LawDocument;
 import UDD.AleksaColovic.SearchEngine.model.enums.DocumentSearchOperation;
 import UDD.AleksaColovic.SearchEngine.model.search.SearchItem;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -21,12 +22,12 @@ public class SearchConverter {
         List<SearchItem> searchItems = new ArrayList<>(dto.getSearchParams().size());
         List<String> searchParams = dto.getSearchParams();
 
-        for (int i = 0; i < dto.getSearchParams().size(); i++) {
+        for (int i = 0; i < searchParams.size(); i++) {
             if (i % 2 == 0) continue;
-            String searchParam = dto.getSearchParams().get(i);
+            String searchParam = searchParams.get(i);
             String field = searchParam.split(":")[0].strip();
             String value = searchParam.split(":")[1].strip();
-            DocumentSearchOperation operation = DocumentSearchOperation.valueOf(dto.getSearchParams().get(i - 1));
+            DocumentSearchOperation operation = DocumentSearchOperation.valueOf(searchParams.get(i - 1));
             searchItems.add(new SearchItem(field, value, operation));
         }
 
@@ -46,6 +47,7 @@ public class SearchConverter {
                             .address(document.getAddress())
                             .content(document.getContent())
                             .fileName(document.getFileName())
+                            .geoPoint(GeoPoint.toPoint(document.getLocation()))
                             .build();
                 })
                 .collect(Collectors.toList());

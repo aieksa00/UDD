@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.geo.Point;
 
 @Data
 @Builder
@@ -18,4 +19,5 @@ public class ContractDTO {
     private String address;
     private String content;
     private String fileName;
+    private Point geoPoint;
 }

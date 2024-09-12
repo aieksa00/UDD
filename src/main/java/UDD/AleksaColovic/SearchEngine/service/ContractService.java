@@ -4,8 +4,10 @@ import UDD.AleksaColovic.SearchEngine.model.ContractDocument;
 import UDD.AleksaColovic.SearchEngine.model.search.SearchItem;
 import UDD.AleksaColovic.SearchEngine.repository.ContractRepository;
 import UDD.AleksaColovic.SearchEngine.service.common.MinioService;
+import UDD.AleksaColovic.SearchEngine.service.helpers.LocationHelper;
 import UDD.AleksaColovic.SearchEngine.service.helpers.SearchHelper;
 import UDD.AleksaColovic.SearchEngine.service.interfaces.ISearchService;
+import co.elastic.clients.elasticsearch._types.GeoLocation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -13,13 +15,13 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.geo.Point;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -27,29 +29,38 @@ public class ContractService implements ISearchService<ContractDocument> {
     //region: Fields
     private final ContractRepository contractRepository;
     private final MinioService minioService;
+    private final String bucketName = "contracts";
 
     private final SearchHelper<ContractDocument> searchHelper;
+    private final LocationHelper locationHelper;
     //endregion
 
     @Override
-    public void create(final ContractDocument document) {
-        contractRepository.save(document);
-    }
-
-    @Override
     public void upload(MultipartFile file) throws Exception {
-        if (minioService.loadFile(file.getOriginalFilename()) != null) {
-            throw new Exception(String.format("File with the given name already exists %s.", file.getOriginalFilename()));
+        if (minioService.checkIfExists(file.getOriginalFilename(), bucketName)) {
+            throw new Exception(String.format("Contract file with the given file name: [%s] already exists.", file.getOriginalFilename()));
+        }
+        if (contractRepository.findByFileName(file.getOriginalFilename()) != null){
+            throw new Exception(String.format("Contract index with the given file name: [%s] already exists.", file.getOriginalFilename()));
         }
 
-        minioService.uploadFile(file.getOriginalFilename(), file);
+        minioService.uploadFile(file.getOriginalFilename(), file, bucketName);
 
         PDDocument document = PDDocument.load(file.getInputStream());
         PDFTextStripper pdfStripper = new PDFTextStripper();
         String text = pdfStripper.getText(document);
         document.close();
 
-        create(parseContract(text, file.getOriginalFilename()));
+        ContractDocument contract = parseContract(text);
+        contract.setFileName(file.getOriginalFilename());
+
+        Point point = locationHelper.getLatAndLon(contract.getAddress());
+        if(point != null){
+            GeoPoint geoPoint = GeoPoint.fromPoint(point);
+            contract.setLocation(geoPoint);
+        }
+
+        contractRepository.save(contract);
     }
 
     @Override
@@ -63,8 +74,23 @@ public class ContractService implements ISearchService<ContractDocument> {
     }
 
     @Override
-    public List<SearchHit<ContractDocument>> search(List<SearchItem> searchItems) {
+    public List<SearchHit<ContractDocument>> search(List<SearchItem> searchItems, OptionalDouble radius) throws Exception {
         Query searchQuery = searchHelper.buildSearchQuery(searchItems);
+
+        if(radius != null){
+            var address = searchItems.stream().filter(searchItem -> searchItem.getField().equals("address")).findFirst();
+            if(address.isPresent()){
+                GeoPoint point = null;
+                try {
+                    point = GeoPoint.fromPoint(locationHelper.getLatAndLon(address.get().getValue()));
+                    searchQuery = searchHelper.addLocationFilter(searchQuery, point, radius.getAsDouble());
+
+                } catch (Exception e) {
+                    throw new Exception("Error while getting a Location from Address");
+                }
+
+            }
+        }
 
         NativeQuery nativeQuery = searchHelper.buildNativeQuery(searchQuery);
 
@@ -74,11 +100,20 @@ public class ContractService implements ISearchService<ContractDocument> {
     }
 
     @Override
-    public void delete(final UUID id) {
+    public void delete(final UUID id) throws Exception{
+        Optional<ContractDocument> document = contractRepository.findById(id);
+        if (document.isEmpty()){
+            throw new Exception(String.format("Contract index with the given id: [%s] does not exist.", id));
+        }
+        if (!minioService.checkIfExists(document.get().getFileName(), bucketName)) {
+            throw new Exception(String.format("Contract file with the given id: [%s] does not exist.", id));
+        }
+
+        minioService.deleteFile(document.get().getFileName(), bucketName);
         contractRepository.deleteById(id);
     }
 
-    private ContractDocument parseContract(String text, String fileName) {
+    private ContractDocument parseContract(String text) {
         List<String> lines = new ArrayList<>(Arrays.stream(text.split("\\r?\\n")).toList());
         lines.removeIf(line -> line.equals(" "));
 
@@ -102,8 +137,7 @@ public class ContractService implements ISearchService<ContractDocument> {
                 governmentName,
                 administrationLevel,
                 address,
-                content,
-                fileName
+                content
         );
     }
 }
