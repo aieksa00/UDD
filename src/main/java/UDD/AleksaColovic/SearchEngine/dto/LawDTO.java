@@ -4,18 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ContractDTO {
+public class LawDTO {
     private String id;
-    private String signerName;
-    private String signerSurname;
-    private String governmentName;
-    private String administrationLevel;
-    private String address;
     private String content;
     private String fileName;
 }

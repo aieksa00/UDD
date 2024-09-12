@@ -1,5 +1,6 @@
 package UDD.AleksaColovic.SearchEngine.model;
 
+import UDD.AleksaColovic.SearchEngine.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

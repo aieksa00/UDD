@@ -33,7 +33,7 @@ public class MinioService {
         }
     }
 
-    public GetObjectResponse loadFile(String fileName) {
+    public GetObjectResponse loadFile(String fileName) throws Exception {
         try {
             // Get signed URL
             var argsDownload = GetPresignedObjectUrlArgs.builder()
@@ -53,7 +53,7 @@ public class MinioService {
             return minioClient.getObject(args);
 
         } catch (Exception e) {
-            return null;
+            throw new Exception("Error while loading file from Minio.");
         }
     }
 

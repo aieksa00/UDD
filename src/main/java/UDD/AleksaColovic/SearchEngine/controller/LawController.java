@@ -1,11 +1,10 @@
 package UDD.AleksaColovic.SearchEngine.controller;
 
-import UDD.AleksaColovic.SearchEngine.converter.ContractConverter;
+import UDD.AleksaColovic.SearchEngine.converter.LawConverter;
 import UDD.AleksaColovic.SearchEngine.converter.SearchConverter;
-import UDD.AleksaColovic.SearchEngine.dto.ContractDTO;
+import UDD.AleksaColovic.SearchEngine.dto.LawDTO;
 import UDD.AleksaColovic.SearchEngine.dto.SearchDTO;
-import UDD.AleksaColovic.SearchEngine.model.ContractDocument;
-import UDD.AleksaColovic.SearchEngine.service.ContractService;
+import UDD.AleksaColovic.SearchEngine.service.LawService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,21 +16,21 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/contract")
+@RequestMapping("/api/law")
 @RequiredArgsConstructor
-public class ContractController {
+public class LawController {
     //region: Fields
-    private final ContractService service;
-    private final ContractConverter contractConverter;
+    private final LawService lawService;
+    private final LawConverter lawConverter;
     private final SearchConverter searchConverter;
     //endregion
 
     @PostMapping("/create")
-    public ResponseEntity<String> create(@RequestBody final ContractDTO dto) {
+    public ResponseEntity<String> create(@RequestBody final LawDTO dto) {
         try {
-            service.create(contractConverter.toDocument(dto));
+            lawService.create(lawConverter.toDocument(dto));
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Contract created successfully!");
+                    .body("Law created successfully!");
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -47,9 +46,9 @@ public class ContractController {
         }
 
         try {
-            service.upload(file);
+            lawService.upload(file);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body("Contract uploaded successfully!");
+                    .body("Law uploaded successfully!");
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -61,11 +60,11 @@ public class ContractController {
     public ResponseEntity<?> findById(@PathVariable final String id) {
         try {
             UUID uuid = UUID.fromString(id);
-            ContractDTO dto = contractConverter.toDTO(service.findById(uuid));
+            LawDTO dto = lawConverter.toDTO(lawService.findById(uuid));
 
             if(dto == null){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(String.format("Contract with the given id: [%s] does not exists", id));
+                        .body(String.format("Law with the given id: [%s] does not exists", id));
             }
 
             return ResponseEntity.status(HttpStatus.OK)
@@ -79,9 +78,9 @@ public class ContractController {
 
     @GetMapping("/all")
     public ResponseEntity<?> findAll() {
-        List<ContractDTO> dtos = new ArrayList<>();
+        List<LawDTO> dtos = new ArrayList<>();
         try {
-            service.findAll().forEach(contractDocument -> dtos.add(contractConverter.toDTO(contractDocument)));
+            lawService.findAll().forEach(lawDocument -> dtos.add(lawConverter.toDTO(lawDocument)));
             return ResponseEntity.status(HttpStatus.OK)
                     .body(dtos);
         }
@@ -94,8 +93,8 @@ public class ContractController {
     @GetMapping("/search")
     public ResponseEntity<?> search(@RequestBody final SearchDTO dto) {
         try {
-            var hits = service.search(searchConverter.createSearchItems(dto));
-            List<ContractDTO> dtos = searchConverter.convertToContractDTOs(hits);
+            var hits = lawService.search(searchConverter.createSearchItems(dto));
+            List<LawDTO> dtos = searchConverter.convertToLawDTOs(hits);
 
             return ResponseEntity.status(HttpStatus.OK)
                     .body(dtos);
@@ -110,10 +109,10 @@ public class ContractController {
     public ResponseEntity<String> delete(@PathVariable final String id) {
         try {
             UUID uuid = UUID.fromString(id);
-            service.delete(uuid);
+            lawService.delete(uuid);
 
             return ResponseEntity.status(HttpStatus.OK)
-                    .body("Contract deleted successfully!");
+                    .body("Law deleted successfully!");
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)

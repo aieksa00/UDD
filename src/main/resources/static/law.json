@@ -1,0 +1,17 @@
+{
+  "properties": {
+    "id": {
+      "type": "keyword"
+    },
+    "content": {
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
+    },
+    "fileName": {
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
+    }
+  }
+}

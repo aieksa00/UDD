@@ -22,7 +22,7 @@ public class IndexController {
     @PutMapping("/recreate")
     public ResponseEntity<String> recreateIndices() {
         Set<String> recreatedIndexes = indexService.recreateIndices();
-        String message = String.format("%d indexes recreated successfully! %s",
+        String message = String.format("%d index(es) recreated successfully! %s",
                 recreatedIndexes.size(),
                 recreatedIndexes);
 

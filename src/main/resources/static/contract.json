@@ -4,25 +4,44 @@
       "type": "keyword"
     },
     "signerName": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
     },
     "signerSurname": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
     },
     "governmentName": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
     },
     "administrationLevel": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
     },
     "address": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
     },
     "content": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
     },
     "fileName": {
-      "type": "text"
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
+    },
+    "location": {
+      "type": "text",
+      "analyzer": "serbian_simple",
+      "search_analyzer": "serbian_simple"
     }
   }
 }

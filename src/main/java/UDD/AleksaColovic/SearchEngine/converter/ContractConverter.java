@@ -2,6 +2,8 @@ package UDD.AleksaColovic.SearchEngine.converter;
 
 import UDD.AleksaColovic.SearchEngine.dto.ContractDTO;
 import UDD.AleksaColovic.SearchEngine.model.ContractDocument;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -13,14 +15,17 @@ public class ContractConverter {
             return null;
         }
 
-        String id = dto.id();
-        if (id == null) {
-            id = UUID.randomUUID().toString();
+        UUID id;
+        if (dto.getId() == null) {
+            id = UUID.randomUUID();
         }
-        return new ContractDocument(id, dto.signerName(), dto.signerSurname(), dto.governmentName(), dto.administrationLevel(), dto.address(), dto.content(), dto.fileName());
+        else {
+            id = UUID.fromString(dto.getId());
+        }
+        return new ContractDocument(id, dto.getSignerName(), dto.getSignerSurname(), dto.getGovernmentName(), dto.getAdministrationLevel(), dto.getAddress(), dto.getContent(), dto.getFileName());
     }
 
-    public ContractDTO toDTO(final ContractDocument document){
+    public ContractDTO toDTO(final ContractDocument document) {
         if (document == null) {
            return null;
         }

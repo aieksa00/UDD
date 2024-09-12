@@ -15,7 +15,7 @@ import java.util.Set;
 
 @Service
 public class DocumentService {
-    private static  final Logger LOG = LoggerFactory.getLogger(DocumentService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DocumentService.class);
 
     public Map<String, String> getDocumentInfo() {
         final var scanner = new ClassPathScanningCandidateComponentProvider(false);
@@ -23,19 +23,20 @@ public class DocumentService {
 
         final Set<BeanDefinition> documentDefinitions = scanner.findCandidateComponents("UDD.AleksaColovic.SearchEngine.model");
 
-        Map<String, String> documentInfo = new HashMap<>(10);
+        Map<String, String> documentInfo = new HashMap<>(documentDefinitions.size());
         for (final BeanDefinition definition : documentDefinitions) {
             try {
                 final Class<?> documentClass = Class.forName(definition.getBeanClassName());
                 String indexName = extractIndexName(documentClass);
                 String mappingPath = extractMappingPath(documentClass);
 
-                if(indexName != null && mappingPath != null) {
+                if (indexName != null && mappingPath != null) {
                     documentInfo.put(indexName, mappingPath);
+                    LOG.info("Added new document class with Index Name: {} and Mapping Path: {}", indexName, mappingPath);
                 }
 
             } catch (ClassNotFoundException e) {
-                LOG.error("{}",e.getMessage(), e);
+                LOG.error("{}", e.getMessage(), e);
             }
         }
 

@@ -2,7 +2,7 @@ package UDD.AleksaColovic.SearchEngine.service;
 
 import UDD.AleksaColovic.SearchEngine.dto.LoginDTO;
 import UDD.AleksaColovic.SearchEngine.dto.RegisterDTO;
-import UDD.AleksaColovic.SearchEngine.model.Role;
+import UDD.AleksaColovic.SearchEngine.model.enums.Role;
 import UDD.AleksaColovic.SearchEngine.model.User;
 import UDD.AleksaColovic.SearchEngine.repository.UserRepository;
 import UDD.AleksaColovic.SearchEngine.service.common.JwtService;
