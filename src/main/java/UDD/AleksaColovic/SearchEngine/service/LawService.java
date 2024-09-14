@@ -11,6 +11,8 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -58,12 +60,12 @@ public class LawService implements ISearchService<LawDocument> {
     }
 
     @Override
-    public Iterable<LawDocument> findAll() {
-        return lawRepository.findAll();
+    public Page<LawDocument> findAll(Pageable pageable) {
+        return lawRepository.findAll(pageable);
     }
 
     @Override
-    public List<SearchHit<LawDocument>> search(List<SearchItem> searchItems, OptionalDouble radius) {
+    public List<SearchHit<LawDocument>> search(List<SearchItem> searchItems, Double radius, Pageable pageable) {
         Query searchQuery = searchHelper.buildSearchQuery(searchItems);
 
         NativeQuery nativeQuery = searchHelper.buildNativeQuery(searchQuery);

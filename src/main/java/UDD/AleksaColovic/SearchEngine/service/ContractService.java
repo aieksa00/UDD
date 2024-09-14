@@ -7,17 +7,17 @@ import UDD.AleksaColovic.SearchEngine.service.common.MinioService;
 import UDD.AleksaColovic.SearchEngine.service.helpers.LocationHelper;
 import UDD.AleksaColovic.SearchEngine.service.helpers.SearchHelper;
 import UDD.AleksaColovic.SearchEngine.service.interfaces.ISearchService;
-import co.elastic.clients.elasticsearch._types.GeoLocation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.geo.Point;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -69,21 +69,20 @@ public class ContractService implements ISearchService<ContractDocument> {
     }
 
     @Override
-    public Iterable<ContractDocument> findAll() {
-        return contractRepository.findAll();
+    public Page<ContractDocument> findAll(Pageable pageable) {
+        return contractRepository.findAll(pageable);
     }
 
     @Override
-    public List<SearchHit<ContractDocument>> search(List<SearchItem> searchItems, OptionalDouble radius) throws Exception {
-        Query searchQuery = searchHelper.buildSearchQuery(searchItems);
+    public List<SearchHit<ContractDocument>> search(List<SearchItem> searchItems, Double radius, Pageable pageable) throws Exception {
+        GeoPoint point = null;
 
         if(radius != null){
             var address = searchItems.stream().filter(searchItem -> searchItem.getField().equals("address")).findFirst();
             if(address.isPresent()){
-                GeoPoint point = null;
+                searchItems.remove(address.get());
                 try {
                     point = GeoPoint.fromPoint(locationHelper.getLatAndLon(address.get().getValue()));
-                    searchQuery = searchHelper.addLocationFilter(searchQuery, point, radius.getAsDouble());
 
                 } catch (Exception e) {
                     throw new Exception("Error while getting a Location from Address");
@@ -92,7 +91,9 @@ public class ContractService implements ISearchService<ContractDocument> {
             }
         }
 
-        NativeQuery nativeQuery = searchHelper.buildNativeQuery(searchQuery);
+        Query searchQuery = searchHelper.buildSearchQuery(searchItems);
+
+        NativeQuery nativeQuery = searchHelper.buildNativeQuery(searchQuery, pageable);
 
         SearchHits<ContractDocument> searchHits = searchHelper.runNativeQuery(nativeQuery, ContractDocument.class, "contract");
 

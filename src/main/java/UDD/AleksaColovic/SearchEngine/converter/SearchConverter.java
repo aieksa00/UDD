@@ -27,8 +27,17 @@ public class SearchConverter {
             String searchParam = searchParams.get(i);
             String field = searchParam.split(":")[0].strip();
             String value = searchParam.split(":")[1].strip();
-            DocumentSearchOperation operation = DocumentSearchOperation.valueOf(searchParams.get(i - 1));
-            searchItems.add(new SearchItem(field, value, operation));
+            boolean isPhrase;
+            DocumentSearchOperation operation;
+            if(searchParams.get(i - 1).contains(":")) {
+                operation = DocumentSearchOperation.valueOf(searchParams.get(i - 1).split(":")[0].strip());
+                isPhrase = true;
+            }
+            else {
+                operation = DocumentSearchOperation.valueOf(searchParams.get(i - 1));
+                isPhrase = false;
+            }
+            searchItems.add(new SearchItem(field, value, operation, isPhrase));
         }
 
         return searchItems;

@@ -2,10 +2,16 @@ package UDD.AleksaColovic.SearchEngine.controller;
 
 import UDD.AleksaColovic.SearchEngine.converter.LawConverter;
 import UDD.AleksaColovic.SearchEngine.converter.SearchConverter;
+import UDD.AleksaColovic.SearchEngine.dto.ContractDTO;
 import UDD.AleksaColovic.SearchEngine.dto.LawDTO;
 import UDD.AleksaColovic.SearchEngine.dto.SearchDTO;
+import UDD.AleksaColovic.SearchEngine.model.ContractDocument;
+import UDD.AleksaColovic.SearchEngine.model.LawDocument;
 import UDD.AleksaColovic.SearchEngine.service.LawService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -64,12 +70,15 @@ public class LawController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> findAll() {
-        List<LawDTO> dtos = new ArrayList<>();
+    public ResponseEntity<?> findAll(@RequestParam final int page, @RequestParam final int size) {
         try {
-            lawService.findAll().forEach(lawDocument -> dtos.add(lawConverter.toDTO(lawDocument)));
+            Pageable pageable = PageRequest.of(page, size);
+
+            Page<LawDocument> pageContracts = lawService.findAll(pageable);
+            Page<LawDTO> dtoPage = pageContracts.map(lawConverter::toDTO);
+
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(dtos);
+                    .body(dtoPage);
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -78,9 +87,11 @@ public class LawController {
     }
 
     @PutMapping("/search")
-    public ResponseEntity<?> search(@RequestBody final SearchDTO dto) {
+    public ResponseEntity<?> search(@RequestBody final SearchDTO dto, @RequestParam final int page, @RequestParam final int size) {
         try {
-            var hits = lawService.search(searchConverter.createSearchItems(dto), dto.getRadius());
+            Pageable pageable = PageRequest.of(page, size);
+
+            var hits = lawService.search(searchConverter.createSearchItems(dto), dto.getRadius(), pageable);
             List<LawDTO> dtos = searchConverter.convertToLawDTOs(hits);
 
             return ResponseEntity.status(HttpStatus.OK)

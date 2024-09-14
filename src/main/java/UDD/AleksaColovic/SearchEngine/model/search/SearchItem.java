@@ -11,6 +11,7 @@ public class SearchItem {
     private String field;
     private String value;
     private DocumentSearchOperation operation;
+    private boolean isPhrase;
 }
 
 

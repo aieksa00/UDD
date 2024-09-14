@@ -14,5 +14,5 @@ import java.util.OptionalDouble;
 @NoArgsConstructor
 public class SearchDTO {
     private List<String> searchParams;
-    private OptionalDouble radius;
+    private Double radius;
 }

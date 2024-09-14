@@ -1,5 +1,6 @@
 package UDD.AleksaColovic.SearchEngine.controller;
 
+import UDD.AleksaColovic.SearchEngine.controller.responses.GetPageOfContractsResponse;
 import UDD.AleksaColovic.SearchEngine.converter.ContractConverter;
 import UDD.AleksaColovic.SearchEngine.converter.SearchConverter;
 import UDD.AleksaColovic.SearchEngine.dto.ContractDTO;
@@ -9,6 +10,10 @@ import UDD.AleksaColovic.SearchEngine.service.ContractService;
 import UDD.AleksaColovic.SearchEngine.service.helpers.LocationHelper;
 import co.elastic.clients.elasticsearch._types.GeoLocation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -67,12 +72,22 @@ public class ContractController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<?> findAll() {
-        List<ContractDTO> dtos = new ArrayList<>();
+    public ResponseEntity<?> findAll(@RequestParam final int page, @RequestParam final int size) {
         try {
-            service.findAll().forEach(contractDocument -> dtos.add(contractConverter.toDTO(contractDocument)));
+            Pageable pageable = PageRequest.of(page, size);
+
+            Page<ContractDocument> pageContracts = service.findAll(pageable);
+            Page<ContractDTO> dtoPage = pageContracts.map(contractConverter::toDTO);
+            
+            GetPageOfContractsResponse resposne = GetPageOfContractsResponse.builder()
+                    .contracts(dtoPage.stream().toList())
+                    .pageSize(size)
+                    .currentPage(page+1)
+                    .totalPages(dtoPage.getTotalPages())
+                    .totalItems(dtoPage.getTotalPages()*size)
+                    .build();
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(dtos);
+                    .body(resposne);
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -81,9 +96,11 @@ public class ContractController {
     }
 
     @PutMapping("/search")
-    public ResponseEntity<?> search(@RequestBody final SearchDTO dto) {
+    public ResponseEntity<?> search(@RequestBody final SearchDTO dto, @RequestParam final int page, @RequestParam final int size) {
         try {
-            var hits = service.search(searchConverter.createSearchItems(dto), dto.getRadius());
+            Pageable pageable = PageRequest.of(page, size);
+
+            var hits = service.search(searchConverter.createSearchItems(dto), dto.getRadius(), pageable);
             List<ContractDTO> dtos = searchConverter.convertToContractDTOs(hits);
 
             return ResponseEntity.status(HttpStatus.OK)
