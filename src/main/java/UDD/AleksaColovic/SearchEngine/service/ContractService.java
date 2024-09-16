@@ -93,6 +93,10 @@ public class ContractService implements ISearchService<ContractDocument> {
 
         Query searchQuery = searchHelper.buildSearchQuery(searchItems);
 
+        if(point != null) {
+            searchQuery = searchHelper.addLocationFilter(searchQuery, point, radius);
+        }
+
         NativeQuery nativeQuery = searchHelper.buildNativeQuery(searchQuery, pageable);
 
         SearchHits<ContractDocument> searchHits = searchHelper.runNativeQuery(nativeQuery, ContractDocument.class, "contract");
