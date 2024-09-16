@@ -77,7 +77,7 @@ public class ContractService implements ISearchService<ContractDocument> {
     public List<SearchHit<ContractDocument>> search(List<SearchItem> searchItems, Double radius, Pageable pageable) throws Exception {
         GeoPoint point = null;
 
-        if(radius != null){
+        if(radius != null && radius != 0){
             var address = searchItems.stream().filter(searchItem -> searchItem.getField().equals("address")).findFirst();
             if(address.isPresent()){
                 searchItems.remove(address.get());

@@ -7,10 +7,8 @@ import UDD.AleksaColovic.SearchEngine.dto.ContractDTO;
 import UDD.AleksaColovic.SearchEngine.dto.SearchDTO;
 import UDD.AleksaColovic.SearchEngine.model.ContractDocument;
 import UDD.AleksaColovic.SearchEngine.service.ContractService;
-import UDD.AleksaColovic.SearchEngine.service.helpers.LocationHelper;
-import co.elastic.clients.elasticsearch._types.GeoLocation;
+import UDD.AleksaColovic.SearchEngine.service.common.MinioService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,20 +25,22 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ContractController {
     //region: Fields
-    private final ContractService service;
+    private final MinioService minioService;
+
+    private final ContractService contractService;
     private final ContractConverter contractConverter;
     private final SearchConverter searchConverter;
     //endregion
 
     @PostMapping("/upload")
-    public ResponseEntity<String> upload(@RequestParam("file") final MultipartFile file) {
+    public ResponseEntity<String> upload(@RequestBody final MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(String.format("Trying to upload an empty file: %s", file.getOriginalFilename()));
         }
 
         try {
-            service.upload(file);
+            contractService.upload(file);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body("Contract uploaded successfully!");
         }
@@ -55,7 +54,7 @@ public class ContractController {
     public ResponseEntity<?> findById(@PathVariable final String id) {
         try {
             UUID uuid = UUID.fromString(id);
-            ContractDTO dto = contractConverter.toDTO(service.findById(uuid));
+            ContractDTO dto = contractConverter.toDTO(contractService.findById(uuid));
 
             if(dto == null){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -71,23 +70,38 @@ public class ContractController {
         }
     }
 
+    @GetMapping("/download")
+    public ResponseEntity<?> download(@RequestParam final String fileName) {
+        try {
+            var response = minioService.loadFile(fileName, "contracts");
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(String.format("There was a problem: %s", e.getMessage()));
+        }
+    }
+
     @GetMapping("/all")
     public ResponseEntity<?> findAll(@RequestParam final int page, @RequestParam final int size) {
         try {
             Pageable pageable = PageRequest.of(page, size);
 
-            Page<ContractDocument> pageContracts = service.findAll(pageable);
+            Page<ContractDocument> pageContracts = contractService.findAll(pageable);
             Page<ContractDTO> dtoPage = pageContracts.map(contractConverter::toDTO);
             
-            GetPageOfContractsResponse resposne = GetPageOfContractsResponse.builder()
+            GetPageOfContractsResponse response = GetPageOfContractsResponse.builder()
                     .contracts(dtoPage.stream().toList())
-                    .pageSize(size)
+                    .pageSize(dtoPage.getSize())
                     .currentPage(page+1)
                     .totalPages(dtoPage.getTotalPages())
-                    .totalItems(dtoPage.getTotalPages()*size)
+                    .totalItems(dtoPage.getNumberOfElements())
                     .build();
+
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(resposne);
+                    .body(response);
         }
         catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -100,11 +114,17 @@ public class ContractController {
         try {
             Pageable pageable = PageRequest.of(page, size);
 
-            var hits = service.search(searchConverter.createSearchItems(dto), dto.getRadius(), pageable);
+            var hits = contractService.search(searchConverter.createSearchItems(dto), dto.getRadius(), pageable);
             List<ContractDTO> dtos = searchConverter.convertToContractDTOs(hits);
 
+            GetPageOfContractsResponse resposne = GetPageOfContractsResponse.builder()
+                    .contracts(dtos)
+                    .pageSize(size)
+                    .currentPage(page+1)
+                    .build();
+
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(dtos);
+                    .body(resposne);
 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -112,11 +132,11 @@ public class ContractController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> delete(@PathVariable final String id) {
+    @DeleteMapping("/delete")
+    public ResponseEntity<String> delete(@RequestParam final String id) {
         try {
             UUID uuid = UUID.fromString(id);
-            service.delete(uuid);
+            contractService.delete(uuid);
 
             return ResponseEntity.status(HttpStatus.OK)
                     .body("Contract deleted successfully!");

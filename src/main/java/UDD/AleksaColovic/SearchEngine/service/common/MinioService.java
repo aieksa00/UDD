@@ -29,7 +29,7 @@ public class MinioService {
         }
     }
 
-    public GetObjectResponse loadFile(String fileName, String bucketName) throws Exception {
+    public String loadFile(String fileName, String bucketName) throws Exception {
         try {
             // Get signed URL
             var argsDownload = GetPresignedObjectUrlArgs.builder()
@@ -38,15 +38,16 @@ public class MinioService {
                     .object(fileName)
                     .expiry(60 * 5) // in seconds
                     .build();
-            var downloadUrl = minioClient.getPresignedObjectUrl(argsDownload);
-            System.out.println(downloadUrl);
-
-            // Get object response
-            var args = GetObjectArgs.builder()
-                    .bucket(bucketName)
-                    .object(fileName)
-                    .build();
-            return minioClient.getObject(args);
+            return minioClient.getPresignedObjectUrl(argsDownload);
+//            System.out.println(downloadUrl);
+//
+//            // Get object response
+//            var args = GetObjectArgs.builder()
+//                    .bucket(bucketName)
+//                    .object(fileName)
+//                    .build();
+//
+//            return minioClient.getObject(args);
 
         } catch (Exception e) {
             throw new Exception("Error while loading file from Minio.");
